@@ -1,0 +1,65 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>this is a web</title>
+    <style>
+        h1{
+            color: #6cf;
+        }
+        h2{
+            color: aqua;
+        }
+        img{
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>有趣的h1标签</h1>
+    <h2>有趣的h2标签~~~</h2>
+    <img src="./a.jpg" alt="">
+    <ul>
+        <li>1</li>
+        <li>2</li>
+        <li>3</li>
+        <li>4</li>
+        <li>5</li>
+        <li>6</li>
+    </ul>
+    <a href="http://blog.haoji.me/vscode-plugin-webview.html">a标签</a>
+    <button class="btn">按钮</button>
+    <script>
+        let li = document.getElementsByTagName('li')[0];
+        li.style.fontSize = '18px';
+        li.style.border = '2px solid aqua';
+        let el = document.getElementsByClassName('btn')[0];
+        el.addEventListener('click', function(){
+            el.style.background = color();
+            addElement();
+            vscode.postMessage({text: '你好，我是Webview啊！'});
+        });
+        function color(){
+            return `rgb(${ran(255, 0)},${ran(255, 0)},${ran(255, 0)})`;
+        }
+        function ran(max, min){
+            return Math.floor(Math.random() * (max - min - 1) + min);
+        }
+        function addElement(){
+            let el = document.createElement('div');
+            el.innerHTML = '这是一个新增的元素';
+            document.body.appendChild(el);
+        }
+        // window.addEventListener('message', event => {
+        //     const message = event.data;
+        //     document.write(message.toString());
+        //     let h1 = document.cteateElement('h1');
+        //     h1.innerText = message;
+        //     document.body.appendChild(h1);
+	    //     console.log('Webview接收到的消息：', message);
+        // })
+    </script>
+</body>
+</html>
