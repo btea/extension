@@ -15,6 +15,10 @@
             width: 100px;
             height: 100px;
         }
+        .book-read{
+            color: aqua;
+            background: #6cf;
+        }
     </style>
 </head>
 <body>
@@ -31,8 +35,10 @@
     </ul>
     <a href="http://blog.haoji.me/vscode-plugin-webview.html">a标签</a>
     <button class="btn">按钮</button>
+    <div class="book-read"></div>
     <script>
         let instance = acquireVsCodeApi();
+        let read = document.getElementsByClassName('book-read')[0];
         let li = document.getElementsByTagName('li')[0];
         li.style.fontSize = '18px';
         li.style.border = '2px solid aqua';
@@ -60,19 +66,36 @@
             if(message.chapter){
                 bookChapter(message.chapter);
             }
+            if(message.chapterWord){
+                chapterWordShow(message.chapterWord);
+            }
         });
+        function chapterWordShow(word){
+            read.innerText = word;
+        }
+
         function bookChapter(c){
             let arr = JSON.parse(c);
             let select = createEl('select');
             if(Array.isArray(arr)){
-                arr.forEach(name => {
+                arr.forEach((name,i) => {
                     let option = createEl('option');
                     option.innerText = name;
+                    option.value = i;
                     select.appendChild(option);
                 });
                 document.body.appendChild(select);
+                getWord(select);
             }
             console.log(arr);
+        }
+
+        function getWord(select){
+            select.addEventListener('change', (e) => {
+                let v = e.target.value;
+                instance.postMessage({index: v});
+                console.log(e.target.value);
+            })
         }
 
         function booksList(list){

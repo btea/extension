@@ -6,6 +6,7 @@ const fs = require('fs');
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
+let allChapter;
 function getWebViewContent(context, templatePath) {
 	const resourcePath = path.join(context.extensionPath, templatePath);
 	const dirPath = path.dirname(resourcePath);
@@ -58,6 +59,7 @@ function bookWord(context, book, panel) {
 	})
 }
 function bookChapter(chanterName, texts, panel){
+	allChapter = texts;
 	panel.webview.postMessage({chapter: JSON.stringify(chanterName)});
 }
 
@@ -91,8 +93,15 @@ function activate(context) {
 		panel.webview.html = html;
 		// panel.webview.postMessage({text: '这是一条消息'});
 		panel.webview.onDidReceiveMessage(message => {
-			let name = message.name;
-			bookWord(context, name, panel);
+			if(message.name){
+				let name = message.name;
+				bookWord(context, name, panel);
+			}
+			if(message.index){
+				let i  = Number(message.index);
+				console.log(message);
+				panel.webview.postMessage({chapterWord: allChapter[i]});
+			}
 		}, undefined, context.subscriptions);
 		List(context, panel);
 	});
