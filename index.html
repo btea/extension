@@ -32,6 +32,7 @@
     <a href="http://blog.haoji.me/vscode-plugin-webview.html">a标签</a>
     <button class="btn">按钮</button>
     <script>
+        let instance = acquireVsCodeApi();
         let li = document.getElementsByTagName('li')[0];
         li.style.fontSize = '18px';
         li.style.border = '2px solid aqua';
@@ -39,7 +40,6 @@
         el.addEventListener('click', function(){
             el.style.background = color();
             addElement();
-            vscode.postMessage({text: '你好，我是Webview啊！'});
         });
         function color(){
             return `rgb(${ran(255, 0)},${ran(255, 0)},${ran(255, 0)})`;
@@ -52,14 +52,52 @@
             el.innerHTML = '这是一个新增的元素';
             document.body.appendChild(el);
         }
-        // window.addEventListener('message', event => {
-        //     const message = event.data;
-        //     document.write(message.toString());
-        //     let h1 = document.cteateElement('h1');
-        //     h1.innerText = message;
-        //     document.body.appendChild(h1);
-	    //     console.log('Webview接收到的消息：', message);
-        // })
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if(message.list){
+                booksList(message.list);
+            }
+            if(message.chapter){
+                bookChapter(message.chapter);
+            }
+        });
+        function bookChapter(c){
+            let arr = JSON.parse(c);
+            let select = createEl('select');
+            if(Array.isArray(arr)){
+                arr.forEach(name => {
+                    let option = createEl('option');
+                    option.innerText = name;
+                    select.appendChild(option);
+                });
+                document.body.appendChild(select);
+            }
+            console.log(arr);
+        }
+
+        function booksList(list){
+            list = JSON.parse(list);
+            if(!Array.isArray(list)){
+                return;
+            }
+            let ul = createEl('ul');
+            list.map(l => {
+                let li = createEl('li');
+                li.style = `cursor: pointer; color: aqua; list-style: none;`;
+                li.innerText = l;
+                li.addEventListener('click', function(){
+                    getBookContent(l);
+                })
+                ul.appendChild(li);
+            });
+            document.body.appendChild(ul);
+        }
+        function getBookContent(name){
+            instance.postMessage({name: name});
+        }
+        function createEl(name){
+            return document.createElement(name);
+        }
     </script>
 </body>
 </html>

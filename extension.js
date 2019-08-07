@@ -3,8 +3,6 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
-
-const os = require('os');
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
@@ -13,39 +11,54 @@ function getWebViewContent(context, templatePath) {
 	const dirPath = path.dirname(resourcePath);
 	let html = fs.readFileSync(resourcePath, 'utf-8');
 	// vscode不支持直接加载本地资源，需要替换成其专有路径格式，这里只是简单的将样式和JS的路径替换
-	html = html.replace(/(<link.+?href="|<script.+?src="|<img.+?src=")(.+?)"/g, (m, $1, $2) => {
+	html = html.replace(/(<link.+?href="|<script.+?src="|<img.+?src="|<embed.+?src=")(.+?)"/g, (m, $1, $2) => {
 		return $1 + vscode.Uri.file(path.resolve(dirPath, $2)).with({ scheme: 'vscode-resource' }).toString() + '"';
 	});
 	return html;
 }
 
 function getExtensionFileVscodeResource(context, relativePath) {
-	console.log(context.extensionPath);
-	console.log(relativePath);
 	const diskPath = vscode.Uri.file(path.join(context.extensionPath, relativePath));
 	return diskPath.with({ scheme: 'vscode-resource' }).toString();
 }
-function bookList(context) {
-	let path = getExtensionFileVscodeResource(context, './book/b.txt');
-	
-	const read = fs.createReadStream(path);
-	let str = '';
-	let title = /《(.+)》/;
-	let chapter = /第.{0,15}章.+(\r\n)+/g;
-	read.on('data',function(chunk){
-        str += chunk;
-    });
-    read.on('end',function(){
-        let n = [];
-        let titles = str.match(chapter);
-        let arr = str.split(chapter);
-        arr.forEach(c => {
-            if(c.length > 100){
-                n.push(c);
-            }
-		});
-		
-    });
+function List(context, panel){
+	let p = path.join(context.extensionPath, './book');
+	fs.readdir(p, (err, data) => {
+		if(err){
+			throw Error(err);
+		}
+		panel.webview.postMessage({list: JSON.stringify(data)});
+	})
+}
+function bookWord(context, book, panel) {
+	book = './book/' + book;
+	let p = path.join(context.extensionPath, book);
+	fs.readFile(p, (err, data) => {
+		if(err){
+			console.log('err', err);
+		}else{
+			let str = data.toString();
+			let chapter = /第.{0,15}章.{0,}(\r\n){0,}/g;
+			let n = [];
+			let titles = str.match(chapter);
+			let arr = str.split(chapter);
+			arr.forEach(c => {
+				if(c.length > 1000){
+					n.push(c);
+				}
+			});
+			titles = titles.filter(t => {
+				let S = t.replace(/\s/g, '');
+				S = S.replace(/(\r\n)+|↵+/g, '');
+				return S.length < 20;
+			});
+			titles = [...new Set(titles)];
+			bookChapter(titles, n, panel);
+		}
+	})
+}
+function bookChapter(chanterName, texts, panel){
+	panel.webview.postMessage({chapter: JSON.stringify(chanterName)});
 }
 
 /**
@@ -78,10 +91,10 @@ function activate(context) {
 		panel.webview.html = html;
 		// panel.webview.postMessage({text: '这是一条消息'});
 		panel.webview.onDidReceiveMessage(message => {
-			console.log('插件收到的消息：', message);
+			let name = message.name;
+			bookWord(context, name, panel);
 		}, undefined, context.subscriptions);
-		bookList(context);
-
+		List(context, panel);
 	});
 
 	context.subscriptions.push(disposable);
