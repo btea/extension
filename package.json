@@ -32,7 +32,7 @@
 		"eslint": "^5.13.0",
 		"glob": "^7.1.4",
 		"mocha": "^6.1.4",
-		"typescript": "^3.3.1",
+		"typescript": "3.9.10",
 		"vscode-test": "^1.0.2"
 	}
 }
